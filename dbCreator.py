@@ -4,7 +4,7 @@ from sqlalchemy_utils import database_exists, create_database
 import csv
 from datetime import datetime
 
-engine = create_engine("mysql+pymysql://root@localhost/statistics?charset=utf8")
+engine = create_engine("mysql+pymysql://root@localhost/statistics?charset=utf8",echo=False)
 if not database_exists(engine.url):
     create_database(engine.url)
 
@@ -30,6 +30,7 @@ heads = Table(
    Column('ticket_date', Date), 
    Column('store_id', String(10)),
    Column('client_id', String(20)), 
+   Column('discount_volume', Integer), 
    Column('total_ticket_cost', Float), 
 )
 
@@ -40,7 +41,7 @@ lines = Table(
    Column('ticket_line', Integer), 
    Column('item_id', String(10)),
    Column('quantity', Integer), 
-   Column('discount_amount', Integer), 
+   Column('discount_amount', Float), 
    Column('total', Float), 
    Column('output_margin', Float), 
 )
@@ -71,6 +72,7 @@ def getDate(txt):
 
 def uploadData():
 	meta.create_all(engine)
+	discounts = {}
 	with engine.connect() as connection:
 		with connection.begin() as transaction:
 			with open('../CLIENT.CSV', "r") as csvfile:
@@ -86,7 +88,8 @@ def uploadData():
 					line[7] = int(line[7])
 					cols = ['client_id','title','dob','store_id','mem_start_date','mem_date','mem_end_date','vip','insee_code','country']
 					values.append({col:val for col,val in zip(cols,line)})
-					if i%1000==0:
+					if i%10000==0:
+						print("Done:",i)
 						try:
 							connection.execute(clients.insert(), values)
 						except:
@@ -94,31 +97,8 @@ def uploadData():
 							raise
 						values = []
 				if values:
-					connection.execute(clients.insert(), values)
-
-			with open('../ENTETES_TICKET_V4.CSV', "r") as csvfile:
-				reader = csv.reader(csvfile,delimiter ='|')
-				values = []
-				for i, line in enumerate(reader):
-					if i==0:
-						continue
-					line[1] = getDate(line[1])
-					line[4] = float(line[4].replace(',','.'))
-					cols = ['ticket_id','ticket_date','store_id','client_id','total_ticket_cost']
-					values.append({col:val for col,val in zip(cols,line)})
-					if i%100000==0:
-						print("Done:",i)
-						try:
-							connection.execute(heads.insert(), values)
-						except:
-							transaction.rollback()
-							raise
-						values = []
-				if values:
 					print("Done:",i)
-					connection.execute(heads.insert(), values)
-
-
+					connection.execute(clients.insert(), values)
 
 
 
@@ -134,6 +114,10 @@ def uploadData():
 					line[4] = float(line[4].replace(',','.'))
 					line[5] = float(line[5].replace(',','.'))
 					line[6] = float(line[6].replace(',','.'))
+					if line[0] in discounts:
+						discounts[line[0]] += 1 if line[4] else 0
+					else:
+						discounts[line[0]] = 1 if line[4] else 0
 					cols = ['ticket_id','ticket_line','item_id','quantity','discount_amount','total','output_margin']
 					values.append({col:val for col,val in zip(cols,line)})
 					if i%100000==0:
@@ -147,6 +131,32 @@ def uploadData():
 				if values:
 					print("Done:",i)
 					connection.execute(lines.insert(), values)
+
+
+
+			with open('../ENTETES_TICKET_V4.CSV', "r") as csvfile:
+				reader = csv.reader(csvfile,delimiter ='|')
+				values = []
+				for i, line in enumerate(reader):
+					if i==0:
+						continue
+					line[0] = int(line[0])
+					line[1] = getDate(line[1])
+					line[4] = float(line[4].replace(',','.'))
+					line[5] = discounts[line[0]]
+					cols = ['ticket_id','ticket_date','store_id','client_id','total_ticket_cost','discount_volume']
+					values.append({col:val for col,val in zip(cols,line)})
+					if i%100000==0:
+						print("Done:",i)
+						try:
+							connection.execute(heads.insert(), values)
+						except:
+							transaction.rollback()
+							raise
+						values = []
+				if values:
+					print("Done:",i)
+					connection.execute(heads.insert(), values)
 
 
 
