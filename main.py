@@ -71,7 +71,7 @@ def getLoyals(conn):
 		print('Count:',count,'Store:',store)
 
 
-def getAttritions(conn):
+def getDifference(conn,y1,y2):
 	for store in getStores(conn):
 		store = store[0]
 		statement = select([	 func.count(	func.distinct(heads.c.client_id) 	)	]).\
@@ -80,11 +80,11 @@ def getAttritions(conn):
 							heads.c.client_id.notin_(	
 								select([	func.distinct(heads.c.client_id) ]).\
 								where(
-									and_(	func.year(heads.c.ticket_date) == 2017,	heads.c.store_id == store 	)
+									and_(	func.year(heads.c.ticket_date) == y1,	heads.c.store_id == store 	)
 								)
 							),
 
-							func.year(heads.c.ticket_date) == 2016,
+							func.year(heads.c.ticket_date) == y2,
 							heads.c.store_id == store 
 						)	
 					)
@@ -94,27 +94,13 @@ def getAttritions(conn):
 			print('Count:',count[0],'Store:',store)
 
 
+def getAttritions(conn):
+	getDifference(conn,2017,2016)
 
 
 
 def getNew(conn):
-	for store in getStores(conn):
-		store = store[0]
-		statement = select([	 func.count(	func.distinct(heads.c.client_id) 	)	]).\
-					where(	
-						and_(
-							heads.c.client_id.notin_(	
-								select([	func.distinct(heads.c.client_id) ]).\
-								where(
-									and_(	func.year(heads.c.ticket_date) == 2016,	heads.c.store_id == store 	)
-								)
-							),
-							func.year(heads.c.ticket_date) == 2017,
-							heads.c.store_id == store 
-						)	
-					)
-		for count in conn.execute(statement).fetchall():
-			print('Count:',count[0],'Store:',store)
+	getDifference(conn,2016,2017)
 
 
 
@@ -194,8 +180,6 @@ def getSales(conn):
 
 
 
-
-
 def getVipCustomers(conn):
 	statement = select([	func.count(	func.distinct(heads.c.client_id) ), heads.c.store_id	]).\
 				where(
@@ -211,6 +195,7 @@ def getVipCustomers(conn):
 
 
 def getVipDiscounts(conn):
+	"select count(DISTINCT client_id),store_id from heads where ticket_date BETWEEN '2016-01-01' and '2017-12-31' and discount_volume>0 group by store_id;"
 	statement = select([	func.sum(	heads.c.discount_volume ), heads.c.store_id	]).\
 				where(
 					and_(
