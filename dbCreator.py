@@ -4,7 +4,7 @@ from sqlalchemy_utils import database_exists, create_database
 import csv
 from datetime import datetime
 
-engine = create_engine("mysql+pymysql://root@localhost/statistics2?charset=utf8",echo=False)
+engine = create_engine("mysql+pymysql://root@localhost/statistics2?charset=utf8",echo=True)
 if not database_exists(engine.url):
     create_database(engine.url)
 
@@ -143,7 +143,7 @@ def uploadData():
 					line[0] = int(line[0])
 					line[1] = getDate(line[1])
 					line[4] = float(line[4].replace(',','.'))
-					line.append(discounts[line[0]])
+					line.append(discounts.get(line[0],0.0))
 					cols = ['ticket_id','ticket_date','store_id','client_id','total_ticket_cost','discount_volume']
 					values.append({col:val for col,val in zip(cols,line)})
 					if i%100000==0:
@@ -157,9 +157,6 @@ def uploadData():
 				if values:
 					print("Done:",i)
 					connection.execute(heads.insert(), values)
-
-
-
 
 
 			with open('../REF_ARTICLE.CSV', "r") as csvfile:
