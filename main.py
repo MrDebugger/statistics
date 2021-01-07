@@ -501,7 +501,7 @@ class Statistics:
 			else:
 				growthRates[store] = round((count  /  len(self.lastYearClients[store])) * 100, 2)
 		
-		fig.add_trace(go.Bar(x=self.stores,y=list(attritionRates.values()),name="Growth Rate"))
+		fig.add_trace(go.Bar(x=self.stores,y=list(growthRates.values()),name="Growth Rate"))
 		return growthRates
 
 
