@@ -159,6 +159,9 @@ def uploadData():
 					connection.execute(heads.insert(), values)
 
 
+
+
+
 			with open('../REF_ARTICLE.CSV', "r") as csvfile:
 				reader = csv.reader(csvfile,delimiter ='|')
 				values = []
