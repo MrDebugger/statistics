@@ -54,23 +54,27 @@ class Statistics:
 										["Number of Clients","Max Expenditure","Min Expenditure","Sale per store"]):
 					fig = subplots.make_subplots(rows=2, cols=2,
 									specs = [[{},{}],[{'colspan':2},None] if 'Clients' not in name else [{},{}]],
-									subplot_titles= ("Month","Quarter","Year") + ("VIP Discounts",) if 'Clients' in name else ()
+									subplot_titles= ("Month","Quarter","Year") + (("VIP Discounts",) if 'Clients' in name else ())
 								)
 					func(fig)
 					if 'Clients' in name:
 						self.getVipDiscounts(fig)
-					fig.update_layout(updatemenus=[
-							go.layout.Updatemenu(buttons=buttons,name=name)
+					fig.update_layout(title_text=name,updatemenus=[
+							go.layout.Updatemenu(buttons=buttons)
 						])
 					f.write(fig.to_html(full_html=False,include_plotlyjs='cdn'))
 
 				
 				fig = go.Figure()
-				for func in  [self.getGrowthRate, self.getAttritionRate, self.getRatio]:
+				for func in  [self.getGrowthRate, self.getAttritionRate]:
 					func(fig)
-				labels = ['Growth Rate','Attrition Rate','Ratio']
+
+				labels = ['Growth Rate','Attrition Rate']
 				buttons = self.create_layout_buttons(labels)
 				fig.update_layout(updatemenus=[go.layout.Updatemenu(buttons=buttons)])
+				f.write(fig.to_html(full_html=False,include_plotlyjs='cdn'))
+				fig = go.Figure()
+				self.getRatio(fig)
 				f.write(fig.to_html(full_html=False,include_plotlyjs='cdn'))
 			pass
 
