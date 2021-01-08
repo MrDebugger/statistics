@@ -34,6 +34,8 @@ class Statistics:
 		with engine.connect() as self.conn:
 			with open('figure.html','w') as f:
 
+				f.write('<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>')
+
 				fig = go.Figure()
 				for func in [self.getLoyals,self.getAttritions,self.getNew,self.getVipCustomers]:
 					func(fig)
@@ -45,7 +47,7 @@ class Statistics:
 								buttons = buttons
 							)]
 						)
-				f.write(fig.to_html(full_html=False,include_plotlyjs='cdn'))
+				f.write(fig.to_html(full_html=False))
 
 				if not self.stores:
 					self.stores = self.getStores()
@@ -53,30 +55,31 @@ class Statistics:
 				for func,name in zip([self.getClientsCount,self.getMax,self.getMin,self.getSales],
 										["Number of Clients","Max Expenditure","Min Expenditure","Sale per store"]):
 					fig = subplots.make_subplots(rows=2, cols=2,
-									specs = [[{},{}],[{'colspan':2},None] if 'Clients' not in name else [{},{}]],
-									subplot_titles= ("Month","Quarter","Year") + (("VIP Discounts",) if 'Clients' in name else ())
+									specs = [[{},{}],[{'colspan':2},None]],
+									subplot_titles= ("Month","Quarter","Year")
 								)
 					func(fig)
-					if 'Clients' in name:
-						self.getVipDiscounts(fig)
 					fig.update_layout(title_text=name,updatemenus=[
 							go.layout.Updatemenu(buttons=buttons)
 						])
-					f.write(fig.to_html(full_html=False,include_plotlyjs='cdn'))
+					f.write(fig.to_html(full_html=False))
 
 				
+
 				fig = go.Figure()
 				for func in  [self.getGrowthRate, self.getAttritionRate]:
 					func(fig)
 				labels = ['Growth Rate','Attrition Rate']
 				buttons = self.create_layout_buttons(labels)
 				fig.update_layout(updatemenus=[go.layout.Updatemenu(buttons=buttons)])
-				f.write(fig.to_html(full_html=False,include_plotlyjs='cdn'))
+				f.write(fig.to_html(full_html=False))
 				
-				fig = go.Figure()
-				self.getRatio(fig)
-				fig.update_layout(title_text="Ratio")	
-				f.write(fig.to_html(full_html=False,include_plotlyjs='cdn'))
+				for func,name in zip([self.getRatio,self.getVipDiscounts],['Ratio','VIP Discounts']):
+					fig = go.Figure()
+					func(fig)
+					fig.update_layout(title_text=name)	
+					f.write(fig.to_html(full_html=False))
+				
 		print("Total time: %f" % (time.time() - now))
 
 	def create_layout_buttons(self,labels,clients=False):
@@ -480,7 +483,7 @@ class Statistics:
 		discounts = {}
 		for discount,store in self.conn.execute(statement).fetchall():
 			discounts[store]=discount 
-		fig.append_trace(go.Bar(x=self.stores,y=list(discounts.values())),2,2)
+		fig.add_trace(go.Bar(x=self.stores,y=list(discounts.values())))
 		return discounts
 
 
