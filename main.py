@@ -68,16 +68,15 @@ class Statistics:
 				fig = go.Figure()
 				for func in  [self.getGrowthRate, self.getAttritionRate]:
 					func(fig)
-
 				labels = ['Growth Rate','Attrition Rate']
 				buttons = self.create_layout_buttons(labels)
 				fig.update_layout(updatemenus=[go.layout.Updatemenu(buttons=buttons)])
 				f.write(fig.to_html(full_html=False,include_plotlyjs='cdn'))
+				
 				fig = go.Figure()
 				self.getRatio(fig)
+				fig.update_layout(title_text="Ratio")	
 				f.write(fig.to_html(full_html=False,include_plotlyjs='cdn'))
-			pass
-
 		print("Total time: %f" % (time.time() - now))
 
 	def create_layout_buttons(self,labels,clients=False):
