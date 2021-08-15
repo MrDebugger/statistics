@@ -16,6 +16,9 @@ build data analysis on top of raw data
 - Project Delivered on 8 Jan 2021
 - Appreciated by Client for awesome Work on 8 Jan 2021
 
+# Project Review:
+![Project Review](https://raw.githubusercontent.com/MrDebugger/statistics/main/statistics%20project%20review%208%20jan%202021.png)
+
 # Project Requirements
 1. number of customers per store per month/quarter/year
 2. number of "loyal" customers per store i.e. purchases in 2016 and 2017
